@@ -1,13 +1,13 @@
 package com.example;
 
+import java.io.IOException;
+
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
-
-import java.io.IOException;
 
 /**
  * JavaFX App
@@ -18,8 +18,8 @@ public class App extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
-        scene = new Scene(loadFXML("primary"), 640, 480);
-        stage.setTitle("Concessionaria");
+        scene = new Scene(loadFXML("primary"), 660, 600);
+        stage.setTitle("Jokenpo");
         stage.getIcons().add(new Image(getClass().getResourceAsStream("images/icone_concessionaria.png")));
         stage.setScene(scene);
         stage.show();
