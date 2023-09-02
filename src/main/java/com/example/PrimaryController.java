@@ -1,58 +1,152 @@
 package com.example;
 
-import java.math.BigDecimal;
-import java.net.URL;
 import java.sql.SQLException;
-import java.util.ResourceBundle;
+import java.util.Random;
 
-import com.example.data.VeiculoDao;
-import com.example.model.Veiculo;
+import com.example.data.JogadorDao;
+import com.example.model.Jogador;
 
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.text.Text;
 
-public class PrimaryController implements Initializable {
+public class PrimaryController {
 
-    @FXML TextField txtMarca;
-    @FXML TextField txtModelo;
-    @FXML TextField txtAno;
-    @FXML TextField txtValor;
-    @FXML TableView<Veiculo> tabela;
-    @FXML TableColumn<Veiculo, String> colMarca;
-    @FXML TableColumn<Veiculo, String> colModelo;
-    @FXML TableColumn<Veiculo, Integer> colAno;
-    @FXML TableColumn<Veiculo, BigDecimal> colValor;
+    @FXML
+    private Button botaoJogar;
+    @FXML
+    private ToggleGroup escolhaJogador;
+    @FXML
+    private RadioButton escolhaPapel;
+    @FXML
+    private RadioButton escolhaPedra;
+    @FXML
+    private RadioButton escolhaTesoura;
+    @FXML
+    private TextField nomeJogador;
+    @FXML
+    private Label restanteRodadas;
+    @FXML
+    private Label resultado;
+    @FXML 
+    private Text imagemComputador;
+    @FXML 
+    private TableView<Jogador> tabela;
+    @FXML 
+    private TableColumn<String, Jogador> nome;
+    @FXML 
+    private TableColumn<Integer, Jogador> vitorias;
+    @FXML 
+    private TableColumn<Integer, Jogador> derrotas;
 
-    VeiculoDao dao = new VeiculoDao();
+    JogadorDao dao = new JogadorDao();
 
-    public void cadastrar(){
-        var veiculo = new Veiculo(
-            txtMarca.getText(), 
-            txtModelo.getText(), 
-            Integer.valueOf(txtAno.getText()), 
-            new BigDecimal(txtValor.getText())
-        );
+    int i;
+    int pontosJogador;
+    int pontosComputador;
+    int numeroJogador;
 
-        try{
-            dao.inserir(veiculo);
-        }catch(SQLException erro){
-            mostrarMensagem("Erro", "Erro ao cadastrar. " + erro.getMessage());
+    
+    public void jogar() {
+
+        Random gerador = new Random();
+        int escolhaComputador = gerador.nextInt(3);
+
+        RadioButton escolha = (RadioButton) escolhaJogador.getSelectedToggle();
+        String valorSelecionado = escolha.getText();
+
+        System.out.println(valorSelecionado);
+        
+        if (valorSelecionado.equals("Pedra")) {
+            numeroJogador = 0;
+        } else if (valorSelecionado.equals("Papel")) {
+            numeroJogador = 1;
+        } else if (valorSelecionado.equals("Tesoura")) {
+            numeroJogador = 2;
         }
 
-        consultar();
+
+        if (escolhaComputador == 0) {
+            imagemComputador.setText("👊");
+        } else if (escolhaComputador == 1) {
+            imagemComputador.setText("🖐");
+        } else {
+            imagemComputador.setText("✌");
+        }
+
+
+        System.out.println(numeroJogador);
+        System.out.println(escolhaComputador);
+
+
+        if (numeroJogador == escolhaComputador) {
+            resultado.setText("Empate! Jogue novamente.");
+        } else if (numeroJogador == 0 && escolhaComputador == 1) {
+            resultado.setText("Derrota! :(");
+            pontosComputador++;
+            i++;
+        } else if (numeroJogador == 0 && escolhaComputador == 2) {
+            resultado.setText("Vitória! :)");
+            pontosJogador++;
+            i++;
+        } else if (numeroJogador == 1 && escolhaComputador == 0) {
+            resultado.setText("Vitória! :)");
+            pontosJogador++;
+            i++;
+        } else if (numeroJogador == 1 && escolhaComputador == 2) {
+            resultado.setText("Derrota! :(");
+            pontosComputador++;
+            i++;
+        } else if (numeroJogador == 2 && escolhaComputador == 1) {
+            resultado.setText("Vitória! :)");
+            pontosJogador++;
+            i++;
+        } else if (numeroJogador == 2 && escolhaComputador == 0) {
+            resultado.setText("Derrota! :(");
+            pontosComputador++;
+            i++;
+        }
+        
+
+        if (i >= 5) {
+            var jogador = new Jogador(
+                nomeJogador.getText(),
+                pontosJogador,
+                pontosComputador
+            );
+
+            try {
+                dao.inserir(jogador);
+            } catch (SQLException erro) {
+                mostrarMensagem("Erro", "Erro ao inserir. " + erro.getMessage());
+            }
+
+            atualizar();
+
+            restanteRodadas.setText("Jogo finalizado!");
+            i = 0;
+            nomeJogador.clear();
+            pontosComputador = 0;
+            pontosJogador = 0;
+        } else {
+            restanteRodadas.setText("Faltam " + (5 - i) + " rodadas");
+        }
     }
 
-    public void consultar(){
+    public void atualizar(){
         try {
-            dao.buscarTodos().forEach(veiculo -> tabela.getItems().add(veiculo));
+            dao.buscarTodos().forEach(jogador -> tabela.getItems().add(jogador));
         } catch (SQLException e) {
-            mostrarMensagem("Erro", "Erro ao buscar veículo. " + e.getMessage());
+            mostrarMensagem("Erro", "Erro ao buscar jogadores. " + e.getMessage());
         }
     }
 
@@ -63,12 +157,10 @@ public class PrimaryController implements Initializable {
         alert.show();
     }
 
-    @Override
-    public void initialize(URL arg0, ResourceBundle arg1) {
-        colMarca.setCellValueFactory(new PropertyValueFactory<>("marca"));
-        colModelo.setCellValueFactory(new PropertyValueFactory<>("modelo"));
-        colAno.setCellValueFactory(new PropertyValueFactory<>("ano"));
-        colValor.setCellValueFactory(new PropertyValueFactory<>("valor"));
+
+    public void initialize() {
+        nome.setCellValueFactory(new PropertyValueFactory<>("nome"));
+        vitorias.setCellValueFactory(new PropertyValueFactory<>("vitorias"));
+        derrotas.setCellValueFactory(new PropertyValueFactory<>("derrotas"));
     }
-   
 }
